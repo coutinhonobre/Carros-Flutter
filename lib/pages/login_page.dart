@@ -1,10 +1,22 @@
-
+import 'package:carros/pages/home_page.dart';
+import 'package:carros/utils/nav.dart';
+import 'package:carros/widgets/app_button.dart';
+import 'package:carros/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
 
-  final _tLogin = TextEditingController();
-  final _tSenha = TextEditingController();
+class _LoginPageState extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+
+  final _tLogin = TextEditingController(text: "Igor");
+
+  final _tSenha = TextEditingController(text: "123");
+
+  final _focusSenha = FocusNode();
 
   @override
   Widget build(BuildContext context) {
@@ -17,73 +29,71 @@ class LoginPage extends StatelessWidget {
   }
 
   _body() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      child: ListView(
-        children: <Widget>[
-          _text("Login", "Digite o login", controller: _tLogin),
-          SizedBox(
-            height: 10,
-          ),
-          _text("Senha", "Digite a senha", controller: _tSenha, password: true),
-          SizedBox(
-            height: 20,
-          ),
-          _button("Login", _onClickLogin)
-        ],
-      ),
-    );
-  }
-
-
-  _text(String label, String hint, {bool password = false, TextEditingController controller}) {
-    return TextFormField(
-      controller: controller,
-          obscureText: password,
-          style: TextStyle(
-            fontSize: 25,
-            color: Colors.blue,
-          ),
-          decoration: InputDecoration(
-            labelText: label,
-            labelStyle: TextStyle(
-              fontSize: 25,
-              color: Colors.grey,
+    return Form(
+      key: _formKey,
+      child: Container(
+        padding: EdgeInsets.all(16),
+        child: ListView(
+          children: <Widget>[
+            AppText("Login", "Digite o login",
+                controller: _tLogin,
+                validator: _validateLogin,
+                keyboardType: TextInputType.text,
+                textInputAction: TextInputAction.next,
+                nextFocus: _focusSenha),
+            SizedBox(
+              height: 10,
             ),
-            hintText: hint,
-            hintStyle: TextStyle(
-              fontSize: 16,
+            AppText("Senha", "Digite a senha",
+                controller: _tSenha,
+                password: true,
+                validator: _validateSenha,
+                keyboardType: TextInputType.number,
+                focusNode: _focusSenha),
+            SizedBox(
+              height: 20,
             ),
-          ),
-        );
-  }
-
-  _button(String text, Function onPressed, {Color cor = Colors.blue}) {
-    return Container(
-      height: 46,
-      child: RaisedButton(
-        color: cor,
-        child: Text(
-          text,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-          ),
+            AppButton("Login", onPressed: _onClickLogin, cor: Colors.blue,)
+          ],
         ),
-        onPressed: onPressed,
       ),
     );
   }
 
-  void _onClickLogin() {
+
+
+
+
+  _onClickLogin() async {
+    bool formOk = _formKey.currentState.validate();
+    if (!formOk) {
+      return;
+    }
+
     String login = _tLogin.text;
     String senha = _tSenha.text;
 
     print("Login: $login, Senha: $senha");
+
+    push(context, HomePage());
+
+
   }
 
+  String _validateLogin(String text) {
+    if (text.isEmpty) {
+      return "Digite o login";
+    }
+    return null;
+  }
+
+  String _validateSenha(String text) {
+    if (text.isEmpty) {
+      return "Digite a senha";
+    }
+    if (text.length < 3) {
+      return "A senha precisa ter pelo menos 3 números";
+    }
+    return null;
+  }
 }
-
-
-
-
