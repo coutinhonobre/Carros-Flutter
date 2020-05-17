@@ -4,8 +4,9 @@ class AppButton extends StatelessWidget {
   Color cor;
   String text;
   Function onPressed;
+  bool showProgress;
 
-  AppButton(this.text, {this.onPressed, this.cor = Colors.blue});
+  AppButton(this.text, {this.onPressed, this.cor = Colors.blue, this.showProgress = false});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +17,8 @@ class AppButton extends StatelessWidget {
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
         ),
-        child: Text(
+        child: showProgress ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white),),):
+        Text(
           text,
           style: TextStyle(
             color: Colors.white,
