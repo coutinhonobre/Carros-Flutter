@@ -16,15 +16,21 @@ class _HomePageState extends State<HomePage>
   TabController _tabController;
 
   @override
-  void initState() {
+  Future<void> initState() {
     // TODO: implement initState
     super.initState();
 
+    _initTabs();
+  }
+
+  Future _initTabs() async {
     _tabController = TabController(length: 3, vsync: this);
 
-    Future<int> future = Prefs.getInt('tabIdx');
+    int tabIdx = await Prefs.getInt('tabIdx');
 
-    future.then((int tabIdx){
+    _tabController.index = tabIdx;
+
+    setState(() {
       _tabController.index = tabIdx;
     });
 
