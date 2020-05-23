@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:carros/pages/api_response.dart';
 import 'package:carros/pages/carro/home_page.dart';
 import 'package:carros/pages/login/login_api.dart';
@@ -16,26 +18,23 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
 
+  final _streamController = StreamController<bool>();
+
   final _tLogin = TextEditingController();
 
   final _tSenha = TextEditingController();
 
   final _focusSenha = FocusNode();
 
-  bool _showProgress = false;
-
   @override
   void initState() {
     super.initState();
 
     Future<Usuario> future = Usuario.get();
-    future.then((Usuario usuario){
-      setState(() {
-        if(usuario != null) {
-          _tLogin.text = usuario.login;
-          push(context, HomePage(), replace: true);
-        }
-      });
+    future.then((Usuario user) {
+      if (user != null) {
+        push(context, HomePage(), replace: true);
+      }
     });
   }
 
@@ -56,39 +55,47 @@ class _LoginPageState extends State<LoginPage> {
         padding: EdgeInsets.all(16),
         child: ListView(
           children: <Widget>[
-            AppText("Login", "Digite o login",
-                controller: _tLogin,
-                validator: _validateLogin,
-                keyboardType: TextInputType.text,
-                textInputAction: TextInputAction.next,
-                nextFocus: _focusSenha),
-            SizedBox(
-              height: 10,
+            AppText(
+              "Login",
+              "Digite o login",
+              controller: _tLogin,
+              validator: _validateLogin,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+              nextFocus: _focusSenha,
             ),
-            AppText("Senha", "Digite a senha",
-                controller: _tSenha,
-                password: true,
-                validator: _validateSenha,
-                keyboardType: TextInputType.number,
-                focusNode: _focusSenha),
+            SizedBox(height: 10),
+            AppText(
+              "Senha",
+              "Digite a senha",
+              controller: _tSenha,
+              password: true,
+              validator: _validateSenha,
+              keyboardType: TextInputType.number,
+              focusNode: _focusSenha,
+            ),
             SizedBox(
               height: 20,
             ),
-            AppButton("Login", onPressed: _onClickLogin, cor: Colors.blue, showProgress: _showProgress,)
+            StreamBuilder<bool>(
+              stream: _streamController.stream,
+              initialData: false,
+              builder: (context, snapshot) {
+                return AppButton(
+                  "Login",
+                  onPressed: _onClickLogin,
+                  showProgress: snapshot.data,
+                );
+              }
+            )
           ],
         ),
       ),
     );
   }
 
-
-
-
-
-  _onClickLogin() async {
-    bool formOk = _formKey.currentState.validate();
-
-    if (!formOk) {
+  void _onClickLogin() async {
+    if (!_formKey.currentState.validate()) {
       return;
     }
 
@@ -97,27 +104,19 @@ class _LoginPageState extends State<LoginPage> {
 
     print("Login: $login, Senha: $senha");
 
-    setState(() {
-      _showProgress = true;
-    });
+    _streamController.add(true);
 
-    ApiResponse<Usuario> response = await LoginApi.login(login, senha);
+    ApiResponse response = await LoginApi.login(login, senha);
 
-    if(response.ok) {
+    if (response.ok) {
+//      Usuario user = response.result;
 
-      Usuario user = response.result;
-
-      print(">>> $user");
-
-      push(context, HomePage(), replace: false);
-    }else{
+      push(context, HomePage(), replace: true);
+    } else {
       alert(context, response.msg);
     }
 
-    setState(() {
-      _showProgress = false;
-    });
-
+    _streamController.add(false);
   }
 
   String _validateLogin(String text) {
@@ -135,5 +134,12 @@ class _LoginPageState extends State<LoginPage> {
       return "A senha precisa ter pelo menos 3 números";
     }
     return null;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _streamController.close();
   }
 }
